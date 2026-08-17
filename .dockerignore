@@ -1,0 +1,12 @@
+# Local build outputs contain restore metadata with host-specific NuGet paths.
+# Do not copy them into the image after `dotnet restore` has run.
+**/bin/
+**/obj/
+
+.git/
+.vs/
+.vscode/
+*.user
+*.suo
+README.md
+prompt.md

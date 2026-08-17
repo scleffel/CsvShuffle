@@ -1,9 +1,0 @@
-bin/
-obj/
-.git/
-.vscode/
-Dockerfile
-*.user
-*.suo
-README.md
-prompt.md
