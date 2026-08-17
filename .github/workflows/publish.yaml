@@ -3,7 +3,7 @@ name: Publish image and Helm chart
 on:
   pull_request:
     branches:
-      - develop
+      - main
     types:
       - closed
 
