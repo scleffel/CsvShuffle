@@ -1,5 +1,4 @@
 <Project>
-  <!-- This is the single release-version source. -->
   <PropertyGroup>
     <Version>1.2.0</Version>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
