@@ -8,6 +8,8 @@ public enum ObfuscationMode
     Date,
     Phone,
     Address,
+    Email,
+    Relationship,
     BracketPreserving,
     Generic
 }
