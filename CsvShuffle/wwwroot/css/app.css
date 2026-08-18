@@ -1,9 +1,53 @@
-:root {
-  color-scheme: dark;
+html,
+body,
+#app {
+  min-height: 100%;
 }
 
+/*noinspection ALL*/
 body {
-  background: #261A0D;
+  background-color: var(--mud-palette-background, #261A0D);
+  color: var(--mud-palette-text-primary, #FFFDC2);
+}
+
+.app-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 2rem;
+}
+
+.app-loading__content {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+}
+
+.app-loading__icon {
+  width: 10rem;
+  height: 10rem;
+  animation: app-loading-pulse 1.5s ease-in-out infinite;
+}
+
+.app-loading__message {
+  margin: 0;
+  color: #FFFDC2;
+  font-family: baileywick-jf-gothic, sans-serif;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+@keyframes app-loading-pulse {
+  50% {
+    opacity: .65;
+    transform: scale(.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading__icon {
+    animation: none;
+  }
 }
 
 .upload-panel {
@@ -36,13 +80,13 @@ body {
   width: min(100%, 22rem);
 }
 
-.column-treatment-bar {
-  overflow-x: auto;
-  padding-bottom: .25rem;
+.color-mode-select {
+  min-width: 8rem;
 }
 
-.column-treatment-select {
-  min-width: 10rem;
+/*noinspection ALL*/
+.obfuscated-cell {
+  color: var(--mud-palette-primary) !important;
 }
 
 .export-panel {

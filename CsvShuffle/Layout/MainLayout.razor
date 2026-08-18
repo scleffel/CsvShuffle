@@ -1,19 +1,22 @@
 @inherits LayoutComponentBase
+@inject IJSRuntime Js
+@implements IAsyncDisposable
 
 <MudThemeProvider Theme="@_theme"
-                  IsDarkMode="_isDarkMode"/>
+                  IsDarkMode="IsDarkMode"/>
 <MudPopoverProvider/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
-<CascadingValue Value="this">
+<CascadingValue Value="@this">
     @Body
 </CascadingValue>
 
 @code {
-    private bool _drawerOpen = true;
-    private bool _isDarkMode = true;
-    private MudTheme? _theme;
+    MudTheme? _theme;
+    ThemePreferenceInterop? _themePreferences;
+    DotNetObjectReference<MainLayout>? _layoutReference;
+    public string CurrentColorModeIcon = Icons.Material.Filled.AutoMode;
 
     protected override void OnInitialized()
     {
@@ -21,47 +24,138 @@
 
         _theme = new MudTheme
         {
+            Typography = _typography,
             PaletteLight = _lightPalette,
             PaletteDark = _darkPalette,
             LayoutProperties = new LayoutProperties()
         };
     }
 
-    private void DrawerToggle()
+    public ColorMode ColorMode { get; private set; } = ColorMode.System;
+
+    public bool IsDarkMode { get; private set; } = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _drawerOpen = !_drawerOpen;
+        if (!firstRender)
+            return;
+
+        _themePreferences = new ThemePreferenceInterop(Js);
+        _layoutReference = DotNetObjectReference.Create(this);
+        var preference = await _themePreferences.InitializeAsync(_layoutReference);
+
+        if (Enum.TryParse(preference.Mode, ignoreCase: true, out ColorMode storedMode)
+            && storedMode is ColorMode.Light or ColorMode.Dark)
+            ColorMode = storedMode;
+
+        IsDarkMode = ColorMode == ColorMode.Dark || ColorMode == ColorMode.System && preference.PrefersDark;
+
+        UpdateColorModeIcon();
+        StateHasChanged();
     }
 
-    public bool IsDarkMode => _isDarkMode;
-
-    public string ThemeToggleIcon => _isDarkMode
-        ? Icons.Material.Filled.LightMode
-        : Icons.Material.Filled.DarkMode;
-
-    public string ThemeToggleLabel => _isDarkMode
-        ? "Switch to light mode"
-        : "Switch to dark mode";
-
-    public void ToggleDarkMode()
+    public async Task SetColorModeAsync(ColorMode colorMode)
     {
-        _isDarkMode = !_isDarkMode;
+        ColorMode = colorMode;
+
+        bool prefersDark = _themePreferences is null
+            ? IsDarkMode
+            : await _themePreferences.ApplyPreferenceAsync(colorMode);
+
+        IsDarkMode = colorMode == ColorMode.Dark || colorMode == ColorMode.System && prefersDark;
+
+        UpdateColorModeIcon();
+        StateHasChanged();
     }
 
-    private readonly PaletteLight _lightPalette = new()
+    public Task CycleColorModeAsync() => SetColorModeAsync(ColorMode switch
     {
-        Primary = "#38A2A3",
-        Secondary = "#03394D",
+        ColorMode.System => ColorMode.Light,
+        ColorMode.Light => ColorMode.Dark,
+        ColorMode.Dark => ColorMode.System,
+        _ => throw new ArgumentOutOfRangeException(nameof(ColorMode), ColorMode, null)
+    });
+
+    void UpdateColorModeIcon()
+    {
+        CurrentColorModeIcon = ColorMode switch
+        {
+            ColorMode.Light => Icons.Material.Filled.LightMode,
+            ColorMode.Dark => Icons.Material.Filled.DarkMode,
+            ColorMode.System => Icons.Material.Filled.AutoMode,
+            _ => throw new ArgumentOutOfRangeException(nameof(ColorMode), ColorMode, null)
+        };
+    }
+
+    [JSInvokable]
+    public async Task OnSystemColorSchemeChanged(bool prefersDark)
+    {
+        if (ColorMode != ColorMode.System)
+            return;
+
+        await InvokeAsync(() =>
+        {
+            IsDarkMode = prefersDark;
+            StateHasChanged();
+        });
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_themePreferences is not null)
+            await _themePreferences.DisposeAsync();
+
+        _layoutReference?.Dispose();
+    }
+
+    readonly PaletteLight _lightPalette = new()
+    {
+        Primary = "#087A7D",
+        PrimaryContrastText = "#FFFEE0",
+        Secondary = "#055f80",
+        SecondaryContrastText = "#FFFEE0",
+        Tertiary = "#A95C12",
+        TertiaryContrastText = "#FFFEE0",
         Black = "#261A0D",
+        White = "#FFFEE0",
+        Background = "#FFF9E9",
+        BackgroundGray = "#F5EBD5",
+        Surface = "#FFFEF5",
         AppbarText = "#261A0D",
-        AppbarBackground = "#FFFDC2",
-        DrawerBackground = "#FFFDC2",
-        GrayLight = "#E8E2B0",
-        GrayLighter = "#FFFEE0"
+        AppbarBackground = "#FFF9E9F2",
+        DrawerBackground = "#FFF9E9",
+        ActionDefault = "#087A7D",
+        ActionDisabled = "#261A0D61",
+        ActionDisabledBackground = "#E8D9BD",
+        TextPrimary = "#261A0D",
+        TextSecondary = "#5E493A",
+        TextDisabled = "#261A0D61",
+        DrawerIcon = "#087A7D",
+        DrawerText = "#261A0D",
+        GrayLight = "#E8D9BD",
+        GrayLighter = "#F5EBD5",
+        Info = "#055f80",
+        InfoContrastText = "#FFFEE0",
+        Success = "#087d31",
+        SuccessContrastText = "#080807",
+        Warning = "#A64B00",
+        WarningContrastText = "#FFFEE0",
+        Error = "#B42318",
+        ErrorContrastText = "#FFFEE0",
+        LinesDefault = "#D5C2A2",
+        LinesInputs = "#9B7D59",
+        TableLines = "#D5C2A2",
+        TableStriped = "#FFF4D9",
+        TableHover = "#F1E5C8",
+        Divider = "#D5C2A2",
+        DividerLight = "#E8D9BD",
+        OverlayLight = "#261A0D66"
     };
 
-    private readonly PaletteDark _darkPalette = new()
+    readonly PaletteDark _darkPalette = new()
     {
         Primary = "#38A2A3",
+        PrimaryContrastText = "#261A0D",
         Secondary = "#03394D",
         Surface = "#29150a",
         Background = "#261A0D",
@@ -80,13 +174,49 @@
         GrayLight = "#522A15",
         GrayLighter = "#38200F",
         Info = "#03394D",
-        Success = "#38A2A3",
-        Warning = "#FFFDC2",
-        Error = "#FFFDC2",
+        Success = "#38a356",
+        SuccessContrastText = "#080807",
+        Warning = "#F5A032",
+        WarningContrastText = "#261A0D",
+        Error = "#F26B5B",
+        ErrorContrastText = "#261A0D",
         LinesDefault = "#6B452D",
         TableLines = "#6B452D",
+        TableHover = "#6448297F",
         Divider = "#522A15",
         OverlayLight = "#261A0DCC"
+    };
+
+    readonly Typography _typography = new()
+    {
+        Default = new DefaultTypography()
+        {
+            FontFamily = ["bahnschrift", "Roboto", "Arial", "sans-serif"]
+        },
+        H1 = new H1Typography()
+        {
+            FontFamily = ["baileywick-jf-gothic", "Roboto", "Arial", "sans-serif"]
+        },
+        H2 = new H2Typography()
+        {
+            FontFamily = ["baileywick-jf-gothic", "Roboto", "Arial", "sans-serif"]
+        },
+        H3 = new H3Typography()
+        {
+            FontFamily = ["baileywick-jf-gothic", "Roboto", "Arial", "sans-serif"]
+        },
+        H4 = new H4Typography()
+        {
+            FontFamily = ["baileywick-jf-gothic", "Roboto", "Arial", "sans-serif"]
+        },
+        H5 = new H5Typography()
+        {
+            FontFamily = ["baileywick-jf-gothic", "Roboto", "Arial", "sans-serif"]
+        },
+        H6 = new H6Typography()
+        {
+            FontFamily = ["baileywick-jf-gothic", "Roboto", "Arial", "sans-serif"]
+        }
     };
 
 }
