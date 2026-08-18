@@ -1,0 +1,24 @@
+<MudDialog>
+    <DialogContent>
+        <MudText>Are you sure you want to clear @FileName?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel">
+            Cancel
+        </MudButton>
+        <MudButton Color="Color.Error"
+                   Variant="Variant.Filled"
+                   OnClick="@Confirm">
+            Clear CSV
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public string FileName { get; set; } = string.Empty;
+
+    void Confirm() => MudDialog.Close(DialogResult.Ok(true));
+
+    void Cancel() => MudDialog.Cancel();
+}

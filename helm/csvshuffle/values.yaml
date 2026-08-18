@@ -1,8 +1,9 @@
 replicaCount: 1
 
 image:
-  repository: csvshuffle
-  tag: latest
+  repository: ghcr.io/scleffel/csvshuffle
+  # Empty uses the chart's appVersion, so a released chart deploys its matching image.
+  tag: ""
   pullPolicy: IfNotPresent
 
 service:

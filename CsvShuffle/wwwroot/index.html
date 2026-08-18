@@ -7,8 +7,7 @@
     <title>CsvShuffle</title>
     <base href="/"/>
     <link id="webassembly" rel="preload"/>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
-          rel="stylesheet"/>
+    <link rel="stylesheet" href="https://use.typekit.net/rwy4pai.css">
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet"/>
     <link href="css/app.css" rel="stylesheet"/>
     <!-- If you add any scoped CSS files, uncomment the following to load them
@@ -20,20 +19,33 @@
 
 <body>
 <div id="app">
-    <svg class="loading-progress">
-        <circle cx="50%" cy="50%" r="40%"/>
-        <circle cx="50%" cy="50%" r="40%"/>
-    </svg>
-    <div class="loading-progress-text"></div>
+    <main class="app-loading" aria-live="polite" aria-label="Loading CSV Shufflé">
+        <div class="app-loading__content">
+            <img class="app-loading__icon" src="icon.svg" alt="" width="128" height="128"/>
+            <p class="app-loading__message">Loading CSV Shufflé<span aria-hidden="true"></span></p>
+        </div>
+    </main>
 </div>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
-    <a class="reload" href=".">Reload</a>
-    <span class="dismiss">🗙</span>
+    <a class="reload" href=".">
+        Reload
+    </a>
+    <span class="dismiss">x</span>
 </div>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-<script>window.csvShuffle={download:(name,text)=>{const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'}));link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);}};</script>
+<script>
+    window.csvShuffle = {
+        download: (name, text) => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([text], {type: 'text/csv;charset=utf-8'}));
+            link.download = name;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        }
+    };
+</script>
 <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 <script>navigator.serviceWorker.register('service-worker.js', {updateViaCache: 'none'});</script>
 </body>
