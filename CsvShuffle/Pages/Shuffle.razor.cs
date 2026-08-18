@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Components;
@@ -41,18 +40,6 @@ public partial class Shuffle : ComponentBase
     string HeaderStatus => _headers.Count == 0
         ? "Up to 500 MB · UTF-8 recommended"
         : _progressLabel;
-
-    bool QuickFilter(CsvRow row) =>
-        string.IsNullOrWhiteSpace(_search)
-        || row.Cells.Any(cell => cell.Contains(_search, StringComparison.OrdinalIgnoreCase));
-
-    string? GetCellClass(int columnIndex) => _modes[columnIndex] == ObfuscationMode.Clear
-        ? null
-        : "obfuscated-cell";
-
-    static string ObfuscationModeLabel(ObfuscationMode mode) => mode == ObfuscationMode.BracketPreserving
-        ? "Bracket Preserving"
-        : mode.ToString();
 
     void SetObfuscationMode(int columnIndex, ObfuscationMode mode) => _modes[columnIndex] = mode;
 
@@ -149,7 +136,7 @@ public partial class Shuffle : ComponentBase
 
                 string[] values =
                 [
-                    .. _rows[rowIndex].Select((value, column) => Transform(
+                    .. _rows[rowIndex].Select((value, column) => ObfuscationRules.Transform(
                         value,
                         _modes[column],
                         consistentValues,
@@ -179,6 +166,14 @@ public partial class Shuffle : ComponentBase
         catch (OperationCanceledException)
         {
             _progressLabel = "Obfuscation cancelled.";
+        }
+        catch (Exception exception)
+        {
+            _obfuscatedCsv = null;
+            _obfuscatedGridRows.Clear();
+            _showObfuscated = false;
+            _progressLabel = "Obfuscation could not complete.";
+            Snackbar.Add($"Obfuscation failed: {exception.Message}", Severity.Error, options => options.RequireInteraction = true);
         }
         finally
         {
@@ -263,151 +258,6 @@ public partial class Shuffle : ComponentBase
         }
 
         return input.ToString();
-    }
-
-    static string Transform(
-        string value,
-        ObfuscationMode mode,
-        Dictionary<string, string> consistentValues,
-        Dictionary<string, string> rowTokens
-    )
-    {
-        if (mode == ObfuscationMode.Clear || string.IsNullOrEmpty(value))
-            return value;
-
-        if (mode is not (ObfuscationMode.Ssn or ObfuscationMode.Phone))
-        {
-            return mode == ObfuscationMode.Date
-                ? TransformDate(
-                    value: value
-                )
-                : TransformText(
-                    value: value,
-                    mode: mode,
-                    rowTokens: rowTokens
-                );
-        }
-
-        string key = $"{mode}|{value}";
-
-        if (consistentValues.TryGetValue(key, out string? prior))
-            return prior;
-
-        string transformed = TransformDigits(value);
-        consistentValues[key] = transformed;
-        return transformed;
-    }
-
-    static string TransformText(string value, ObfuscationMode mode, Dictionary<string, string> rowTokens)
-    {
-        var result = new StringBuilder(value.Length);
-        bool preserveVowelClass =
-            mode is ObfuscationMode.Name or ObfuscationMode.Address or ObfuscationMode.BracketPreserving;
-        int bracketDepth = 0;
-        bool hasAddressDigits = false;
-
-        for (int index = 0; index < value.Length;)
-        {
-            char character = value[index];
-            if (mode == ObfuscationMode.BracketPreserving)
-            {
-                switch (character)
-                {
-                    case '(' or '[' or '{':
-                        bracketDepth++;
-                        break;
-                    case ')' or ']' or '}' when bracketDepth > 0:
-                        bracketDepth--;
-                        break;
-                }
-
-                if (bracketDepth > 0 || character is ')' or ']' or '}')
-                {
-                    result.Append(character);
-                    index++;
-                    continue;
-                }
-            }
-
-            if (char.IsLetter(character))
-            {
-                int end = index + 1;
-                while (end < value.Length && char.IsLetter(value[end]))
-                    end++;
-
-                string token = value[index..end];
-                string key = $"{mode}|{token}";
-                if (!rowTokens.TryGetValue(key, out string? replacement))
-                {
-                    replacement =
-                        new string(token.Select(letter => RandomLetter(letter, preserveVowelClass)).ToArray());
-                    rowTokens[key] = replacement;
-                }
-
-                result.Append(replacement);
-                index = end;
-                continue;
-            }
-
-            if (char.IsDigit(character))
-            {
-                bool firstAddressDigit = mode == ObfuscationMode.Address && !hasAddressDigits;
-                result.Append(firstAddressDigit && character != '0'
-                    ? (char)('1' + Random.Shared.Next(9))
-                    : (char)('0' + Random.Shared.Next(10)));
-                hasAddressDigits = hasAddressDigits || mode == ObfuscationMode.Address;
-                index++;
-                continue;
-            }
-
-            result.Append(character);
-            index++;
-        }
-
-        return result.ToString();
-    }
-
-    static string TransformDigits(string value) =>
-        new(value.Select(character => char.IsDigit(character)
-            ? (char)('0' + Random.Shared.Next(10))
-            : character).ToArray());
-
-    static char RandomLetter(
-        char source,
-        bool preserveVowelClass
-    )
-    {
-        const string vowels = "aeiouy";
-        const string consonants = "bcdfghjklmnpqrstvwxz";
-
-        string pool = preserveVowelClass && vowels.Contains(char.ToLowerInvariant(source))
-            ? vowels
-            : preserveVowelClass
-                ? consonants
-                : "abcdefghijklmnopqrstuvwxyz";
-
-        char result = pool[Random.Shared.Next(pool.Length)];
-
-        return char.IsUpper(source)
-            ? char.ToUpperInvariant(result)
-            : result;
-    }
-
-    static string TransformDate(string value)
-    {
-        if (!DateTime.TryParse(value, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces, out var date)
-            && !DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out date))
-            return TransformText(
-                value: value,
-                mode: ObfuscationMode.Generic,
-                rowTokens: []
-            );
-
-        return date
-            .AddYears(Random.Shared.Next(-5, 6))
-            .AddMonths(Random.Shared.Next(-2, 3))
-            .AddDays(Random.Shared.Next(-10, 11))
-            .ToString("M/d/yyyy", CultureInfo.InvariantCulture);
     }
 
     static List<string[]> ParseCsv(string input)

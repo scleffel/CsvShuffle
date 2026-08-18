@@ -1,0 +1,101 @@
+<MudDataGrid T="CsvRow"
+             Items="@Rows"
+             QuickFilter="@QuickFilter"
+             Filterable
+             FilterMode="DataGridFilterMode.ColumnFilterMenu"
+             FixedHeader
+             Height="calc(100svh - 196px)"
+             ColumnResizeMode="ResizeMode.Column"
+             RowsPerPage="100"
+             Dense
+             Hover
+             Bordered
+             Virtualize>
+    <Columns>
+        @for (int i = 0; i < Headers.Count; i++)
+        {
+            int index = i;
+            var selectedMode = GetMode(index);
+
+            <PropertyColumn T="CsvRow"
+                            TProperty="string"
+                            Property="@(x => x.Cells[index])"
+                            Title="@Headers[index]"
+                            CellClass="@GetCellClass(index)">
+                <HeaderTemplate>
+                    @{
+                        string obfIcon = selectedMode == ObfuscationMode.Clear
+                            ? Icons.Material.Outlined.Deblur
+                            : Icons.Material.Filled.BlurOn;
+
+                        var obfColor = selectedMode == ObfuscationMode.Clear
+                            ? Color.Default
+                            : Color.Primary;
+                    }
+                    <MudStack Row Spacing="0"
+                              Justify="Justify.SpaceBetween"
+                              AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.body2">
+                            @Headers[index]
+                        </MudText>
+                        <MudTooltip Text="@($"Shuffle: {ObfuscationModeLabel(selectedMode)}")">
+                            <MudMenu Icon="@obfIcon"
+                                     Color="@obfColor"
+                                     Size="Size.Small"
+                                     AriaLabel="@($"Set obfuscation mode for {Headers[index]}")">
+                                @foreach (var mode in Enum.GetValues<ObfuscationMode>())
+                                {
+                                    <MudMenuItem Icon="@(
+                                                       mode == GetMode(index)
+                                                           ? Icons.Material.Filled.Check
+                                                           : null
+                                                       )"
+                                                 OnClick="@(() => OnModeChanged.InvokeAsync((index, mode)))">
+                                        @ObfuscationModeLabel(mode)
+                                    </MudMenuItem>
+                                }
+                            </MudMenu>
+                        </MudTooltip>
+                    </MudStack>
+                </HeaderTemplate>
+            </PropertyColumn>
+        }
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="CsvRow" PageSizeOptions="@([100, 500, 1000])"/>
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<string> Headers { get; set; } = [];
+
+    [Parameter]
+    public IEnumerable<CsvRow> Rows { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<ObfuscationMode> Modes { get; set; } = [];
+
+    [Parameter]
+    public string Search { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<(int ColumnIndex, ObfuscationMode Mode)> OnModeChanged { get; set; }
+
+    bool QuickFilter(CsvRow row) =>
+        string.IsNullOrWhiteSpace(Search)
+        || row.Cells.Any(cell => cell.Contains(Search, StringComparison.OrdinalIgnoreCase));
+
+    ObfuscationMode GetMode(int columnIndex) => columnIndex < Modes.Count
+        ? Modes[columnIndex]
+        : ObfuscationMode.Clear;
+
+    string? GetCellClass(int columnIndex) => GetMode(columnIndex) == ObfuscationMode.Clear
+        ? null
+        : "obfuscated-cell";
+
+    static string ObfuscationModeLabel(ObfuscationMode mode) => mode == ObfuscationMode.BracketPreserving
+        ? "Bracket Preserving"
+        : mode.ToString();
+
+}
