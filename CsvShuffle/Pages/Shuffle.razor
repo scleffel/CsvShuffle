@@ -20,6 +20,7 @@
     {
         <MudPaper Outlined
                   Class="pa-1 export-panel">
+
             <ShuffleToolbar FileName="@_fileName"
                             ColumnCount="@_headers.Count"
                             RowCount="@_rows.Count"
@@ -34,6 +35,7 @@
                             OnCancel="@Cancel"
                             OnObfuscate="@Obfuscate"
                             OnSave="@Download"/>
+
             <ShuffleDataGrid Headers="@_headers"
                              Rows="@VisibleGridRows"
                              Modes="@_modes"

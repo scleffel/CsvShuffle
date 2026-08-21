@@ -2,7 +2,9 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/scleffel/csvshuffle
+  # Set to the released version (for example, "1.2.3") when deploying from a values file.
   # Empty uses the chart's appVersion, so a released chart deploys its matching image.
+  # Image tags never use a "v" prefix.
   tag: ""
   pullPolicy: IfNotPresent
 

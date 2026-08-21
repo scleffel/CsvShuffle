@@ -15,6 +15,7 @@
 @code {
     MudTheme? _theme;
     ThemePreferenceInterop? _themePreferences;
+    PwaUpdateInterop? _pwaUpdate;
     DotNetObjectReference<MainLayout>? _layoutReference;
     public string CurrentColorModeIcon = Icons.Material.Filled.AutoMode;
 
@@ -34,6 +35,7 @@
     public ColorMode ColorMode { get; private set; } = ColorMode.System;
 
     public bool IsDarkMode { get; private set; } = true;
+    public bool UpdateAvailable { get; private set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -41,8 +43,10 @@
             return;
 
         _themePreferences = new ThemePreferenceInterop(Js);
+        _pwaUpdate = new PwaUpdateInterop(Js);
         _layoutReference = DotNetObjectReference.Create(this);
         var preference = await _themePreferences.InitializeAsync(_layoutReference);
+        await _pwaUpdate.InitializeAsync(_layoutReference);
 
         if (Enum.TryParse(preference.Mode, ignoreCase: true, out ColorMode storedMode)
             && storedMode is ColorMode.Light or ColorMode.Dark)
@@ -100,10 +104,29 @@
         });
     }
 
+    [JSInvokable]
+    public async Task OnPwaUpdateAvailable()
+    {
+        await InvokeAsync(() =>
+        {
+            UpdateAvailable = true;
+            StateHasChanged();
+        });
+    }
+
+    public async Task ApplyUpdateAsync()
+    {
+        if (_pwaUpdate is not null)
+            await _pwaUpdate.ApplyUpdateAsync();
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_themePreferences is not null)
             await _themePreferences.DisposeAsync();
+
+        if (_pwaUpdate is not null)
+            await _pwaUpdate.DisposeAsync();
 
         _layoutReference?.Dispose();
     }
