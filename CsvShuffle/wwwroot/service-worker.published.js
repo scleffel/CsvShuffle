@@ -35,7 +35,14 @@ async function onActivate(event) {
     await Promise.all(cacheKeys
         .filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
         .map(key => caches.delete(key)));
+
+    await self.clients.claim();
 }
+
+self.addEventListener('message', event => {
+    if (event.data?.type === 'SKIP_WAITING')
+        self.skipWaiting();
+});
 
 async function onFetch(event) {
     let cachedResponse = null;
