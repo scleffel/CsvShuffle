@@ -123,13 +123,19 @@ async function checkHostVersion(layout, currentVersion) {
 export async function initializePwaUpdate(layout, currentVersion) {
     if ('serviceWorker' in navigator) {
         pwaAbortController = new AbortController();
-        pwaRegistration = await navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' });
 
+        const hadController = navigator.serviceWorker.controller !== null;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-            window.location.reload();
+            if (hadController)
+                window.location.reload();
         }, { once: true, signal: pwaAbortController.signal });
 
-        await pwaRegistration.update();
+        try {
+            pwaRegistration = await navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' });
+            await pwaRegistration.update();
+        } catch {
+            // Leave the application usable when the service worker cannot be registered.
+        }
     }
 
     await checkHostVersion(layout, currentVersion);
