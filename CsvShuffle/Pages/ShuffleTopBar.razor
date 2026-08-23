@@ -1,39 +1,66 @@
 <MudStack Row
-          Class="py-1"
+          Class="shuffle-topbar py-1"
           AlignItems="AlignItems.Center"
           Justify="Justify.SpaceBetween">
 
-    <MudStack Row>
+    <MudStack Row
+              AlignItems="AlignItems.Center"
+              Class="shuffle-topbar__identity">
         <MudImage Src="icon.svg"
                   Alt="CSV Shufflé Icon"
-                  Width="40" Height="40"/>
+                  Width="40"
+                  Height="40"/>
         <MudStack Row AlignItems="AlignItems.Baseline">
-            <MudText Typo="Typo.h4">
+            <MudText Typo="Typo.h4"
+                     Class="shuffle-topbar__title">
                 CSV Shufflé
             </MudText>
             <MudText Typo="Typo.subtitle2"
                      Style="opacity: 0.5">
                 @($"v{AppVersion}")
             </MudText>
+            @if (Layout.UpdateAvailable)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.Update"
+                           OnClick="@Layout.ApplyUpdateAsync">
+                    Update
+                </MudButton>
+            }
         </MudStack>
     </MudStack>
 
-    <MudStack Row AlignItems="AlignItems.Center">
+    <MudStack Row
+              Class="shuffle-topbar__actions"
+              AlignItems="AlignItems.Center">
         <MudText Typo="Typo.caption"
                  Color="Color.Tertiary">
             @Status
         </MudText>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
+                   Class="browse-csv-button browse-csv-button--full"
                    StartIcon="@Icons.Material.Filled.FolderOpen"
                    EndIcon="@Icons.Material.Filled.UploadFile"
                    HtmlTag="label"
                    tabindex="0">
-            Browse for CSV
+            Select CSV
             <InputFile class="file-input"
                        OnChange="@OnFileSelected"
                        accept=".csv,text/csv"/>
         </MudButton>
+        <MudTooltip Text="Select CSV">
+            <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                           Color="Color.Primary"
+                           Class="browse-csv-button browse-csv-button--compact"
+                           HtmlTag="label"
+                           aria-label="Select CSV">
+                <InputFile class="file-input"
+                           OnChange="@OnFileSelected"
+                           accept=".csv,text/csv"/>
+            </MudIconButton>
+        </MudTooltip>
         <MudTooltip Text="Cycle color mode: System, Light, Dark">
             <MudIconButton Icon="@Layout.CurrentColorModeIcon"
                            Color="Color.Primary"
@@ -41,18 +68,31 @@
                            OnClick="@Layout.CycleColorModeAsync"/>
         </MudTooltip>
         <MudChip T="string"
+                 Class="local-only-chip local-only-chip--full"
                  Color="Color.Success"
                  Variant="Variant.Outlined"
                  Icon="@Icons.Material.Filled.VerifiedUser">
             Local only
         </MudChip>
+        <MudTooltip Text="Local only">
+            <MudIcon Icon="@Icons.Material.Filled.VerifiedUser"
+                     Class="local-only-chip local-only-chip--compact"
+                     Color="Color.Success"/>
+        </MudTooltip>
     </MudStack>
 
 </MudStack>
 
 @code {
-    [CascadingParameter] public MainLayout Layout { get; set; } = null!;
-    [Parameter] public string AppVersion { get; set; } = null!;
-    [Parameter] public string Status { get; set; } = null!;
-    [Parameter] public EventCallback<InputFileChangeEventArgs> OnFileSelected { get; set; }
+    [CascadingParameter]
+    public MainLayout Layout { get; set; } = null!;
+
+    [Parameter]
+    public string AppVersion { get; set; } = null!;
+
+    [Parameter]
+    public string Status { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<InputFileChangeEventArgs> OnFileSelected { get; set; }
 }

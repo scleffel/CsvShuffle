@@ -93,7 +93,90 @@ body {
   background: linear-gradient(120deg, rgb(56 162 163 / 18%), transparent 55%);
 }
 
-@media (max-width: 600px) {
+.shuffle-topbar {
+  width: 100%;
+  min-width: 0;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.shuffle-topbar::-webkit-scrollbar {
+  display: none;
+}
+
+.shuffle-topbar__identity,
+.shuffle-topbar__actions {
+  flex: 0 0 auto;
+  flex-wrap: nowrap !important;
+  white-space: nowrap;
+}
+
+.browse-csv-button,
+.local-only-chip {
+  position: relative;
+}
+
+.browse-csv-button--compact,
+.local-only-chip--compact {
+  display: none;
+}
+
+.shuffle-toolbar {
+  width: 100%;
+  min-width: 0;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.shuffle-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.shuffle-toolbar__group {
+  flex: 0 0 auto;
+  flex-wrap: nowrap !important;
+}
+
+.toolbar-file-name--full {
+  max-width: 14rem;
+  min-width: 0;
+  font-family: monospace;
+  font-size: .8rem;
+  overflow: hidden;
+}
+
+.toolbar-file-name--compact {
+  max-width: 10rem;
+  min-width: 0;
+  font-family: monospace;
+  font-size: .75rem !important;
+  overflow: hidden;
+}
+
+.toolbar-file-name--text {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar-counts {
+  font-size: .7rem;
+}
+
+.shuffle-toolbar .global-search {
+  width: clamp(9rem, 20vw, 14rem);
+}
+
+.toolbar-action--compact {
+  display: none !important;
+}
+
+@media (max-width: 1140px) {
   .preview-heading, .export-layout {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -102,5 +185,31 @@ body {
 
   .global-search {
     width: 100%;
+  }
+
+  .shuffle-topbar__title {
+    font-size: 1.5rem !important;
+  }
+
+  .browse-csv-button--full,
+  .local-only-chip--full {
+    display: none;
+  }
+
+  .browse-csv-button--compact,
+  .local-only-chip--compact {
+    display: inline-flex;
+  }
+
+  .shuffle-toolbar .global-search {
+    width: 10rem;
+  }
+
+  .toolbar-action--full {
+    display: none !important;
+  }
+
+  .toolbar-action--compact {
+    display: inline-flex !important;
   }
 }

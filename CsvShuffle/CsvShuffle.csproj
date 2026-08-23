@@ -21,4 +21,16 @@
         <ServiceWorker Include="wwwroot\\service-worker.js" PublishedContent="wwwroot\\service-worker.published.js"/>
     </ItemGroup>
 
+    <Target Name="WriteBuildVersionManifest" AfterTargets="Build">
+        <WriteLinesToFile File="$(OutputPath)wwwroot/version.json"
+                          Lines="{&quot;version&quot;:&quot;$(Version)&quot;}"
+                          Overwrite="true"/>
+    </Target>
+
+    <Target Name="WritePublishedVersionManifest" AfterTargets="Publish">
+        <WriteLinesToFile File="$(PublishDir)wwwroot/version.json"
+                          Lines="{&quot;version&quot;:&quot;$(Version)&quot;}"
+                          Overwrite="true"/>
+    </Target>
+
 </Project>

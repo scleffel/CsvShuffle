@@ -1,81 +1,138 @@
-<MudStack Spacing="2" Class="mb-1">
+<MudStack Row
+          Spacing="2"
+          Class="shuffle-toolbar mb-1"
+          AlignItems="AlignItems.Center"
+          Justify="Justify.SpaceBetween">
 
-    <MudStack Row AlignItems="AlignItems.Center"
-              Justify="Justify.SpaceBetween">
-
-        <MudStack Row Spacing="2"
-                  AlignItems="AlignItems.Center">
+    <MudStack Row
+              Spacing="2"
+              Class="shuffle-toolbar__group"
+              AlignItems="AlignItems.Center">
+        <MudTooltip Text="@FileName">
             <MudChip T="string"
-                     Style="font-family: monospace;"
-                     Variant="Variant.Outlined"
+                     Class="toolbar-file-name--full toolbar-action--full"
+                     Variant="Variant.Text"
                      Color="Color.Tertiary"
                      Label="true">
-                @FileName
+                    <span class="toolbar-file-name--text">
+                        @FileName
+                    </span>
             </MudChip>
             <MudChip T="string"
-                     Color="Color.Secondary">
-                @ColumnCount columns
+                     Class="toolbar-file-name--compact toolbar-action--compact"
+                     Color="Color.Tertiary"
+                     Variant="Variant.Text"
+                     Label="true">
+                    <span class="toolbar-file-name--text">
+                        @FileName
+                    </span>
             </MudChip>
-            <MudChip T="string"
-                     Color="Color.Secondary">
-                @RowCount.ToString("N0") rows
-            </MudChip>
-            <MudTooltip Text="@($"Drop {FileName}")">
-                <MudIconButton Color="Color.Error"
-                               Icon="@Icons.Material.Filled.DeleteForever"
-                               Disabled="@Busy"
-                               aria-label="@($"Drop {FileName}")"
-                               OnClick="@OnClear"/>
-            </MudTooltip>
-        </MudStack>
+        </MudTooltip>
+        <MudChip T="string"
+                 Class="toolbar-counts toolbar-action--full"
+                 Color="Color.Secondary">
+            @ColumnCount columns
+        </MudChip>
+        <MudChip T="string"
+                 Class="toolbar-counts toolbar-action--full"
+                 Color="Color.Secondary">
+            @RowCount.ToString("N0") rows
+        </MudChip>
+        <MudChip T="string"
+                 Class="toolbar-counts toolbar-action--compact"
+                 Color="Color.Secondary">
+            @($"{ColumnCount}c : {RowCount:N0}r")
+        </MudChip>
+        <MudTooltip Text="@($"Drop {FileName}")">
+            <MudIconButton Color="Color.Error"
+                           Icon="@Icons.Material.Filled.DeleteForever"
+                           Disabled="@Busy"
+                           aria-label="@($"Drop {FileName}")"
+                           OnClick="@OnClear"/>
+        </MudTooltip>
+    </MudStack>
 
-        <MudStack Row Spacing="2"
-                  AlignItems="AlignItems.Center">
-            <MudSwitch Value="@ShowObfuscated"
-                       ValueChanged="@ShowObfuscatedChanged"
-                       Color="Color.Primary"
-                       Disabled="@(!HasObfuscatedData)">
-                @(ShowObfuscated ? "Scrambled" : "Original")
-            </MudSwitch>
-            <MudTextField Value="@Search"
-                          ValueChanged="@SearchChanged"
-                          Margin="Margin.Dense"
-                          Immediate
-                          aria-label="Search all columns"
-                          Placeholder="Search all columns"
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search"
-                          Variant="Variant.Outlined"
-                          Class="global-search"/>
-            @if (Busy)
-            {
-                <MudButton Variant="Variant.Text"
-                           Color="Color.Error"
-                           Class="px-5"
-                           StartIcon="@Icons.Material.Filled.Cancel"
-                           OnClick="@OnCancel">
-                    Cancel
-                </MudButton>
-            }
-            else
-            {
-                <MudButton Variant="Variant.Filled"
+    <MudStack Row
+              Spacing="2"
+              Class="shuffle-toolbar__group"
+              AlignItems="AlignItems.Center">
+
+        <MudSwitch Value="@ShowObfuscated"
+                   ValueChanged="@ShowObfuscatedChanged"
+                   Color="Color.Primary"
+                   Class="toolbar-action--full"
+                   Disabled="@(!HasObfuscatedData)">
+            @SwitchLabel
+        </MudSwitch>
+        <MudTooltip Text="@SwitchLabelHelper">
+            <MudIconButton Icon="@SwitchCompactIcon"
                            Color="Color.Primary"
-                           Class="px-5"
-                           StartIcon="@Icons.Material.Filled.Shuffle"
-                           OnClick="@OnObfuscate">
-                    Obfuscate
-                </MudButton>
-            }
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Secondary"
-                       Class="px-5 me-1"
-                       StartIcon="@Icons.Material.Filled.Download"
-                       Disabled="@(Busy || !CanSave)"
-                       OnClick="@OnSave">
-                Save
+                           Class="toolbar-action--compact"
+                           Disabled="@(!HasObfuscatedData)"
+                           aria-label="@SwitchLabelHelper"
+                           OnClick="@ToggleDisplayedData"/>
+        </MudTooltip>
+
+        <MudTextField Value="@Search"
+                      ValueChanged="@SearchChanged"
+                      Margin="Margin.Dense"
+                      Immediate
+                      aria-label="Search all"
+                      Placeholder="Search all"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Variant="Variant.Outlined"
+                      Class="global-search"/>
+        @if (Busy)
+        {
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Error"
+                       Class="toolbar-action--full"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="@OnCancel">
+                Cancel
             </MudButton>
-        </MudStack>
+            <MudTooltip Text="Cancel">
+                <MudIconButton Icon="@Icons.Material.Filled.Cancel"
+                               Color="Color.Error"
+                               Class="toolbar-action--compact"
+                               aria-label="Cancel"
+                               OnClick="@OnCancel"/>
+            </MudTooltip>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Class="toolbar-action--full"
+                       StartIcon="@Icons.Material.Filled.BlurOn"
+                       OnClick="@OnObfuscate">
+                Obfuscate
+            </MudButton>
+            <MudTooltip Text="Obfuscate">
+                <MudIconButton Icon="@Icons.Material.Filled.BlurOn"
+                               Color="Color.Primary"
+                               Class="toolbar-action--compact"
+                               aria-label="Obfuscate"
+                               OnClick="@OnObfuscate"/>
+            </MudTooltip>
+        }
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Secondary"
+                   Class="toolbar-action--full"
+                   StartIcon="@Icons.Material.Filled.Download"
+                   Disabled="@(Busy || !CanSave)"
+                   OnClick="@OnSave">
+            Save
+        </MudButton>
+        <MudTooltip Text="Save">
+            <MudIconButton Icon="@Icons.Material.Filled.Download"
+                           Color="Color.Secondary"
+                           Class="toolbar-action--compact"
+                           Disabled="@(Busy || !CanSave)"
+                           aria-label="Save obfuscated CSV"
+                           OnClick="@OnSave"/>
+        </MudTooltip>
     </MudStack>
 </MudStack>
 
@@ -94,4 +151,18 @@
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback OnObfuscate { get; set; }
     [Parameter] public EventCallback OnSave { get; set; }
+
+    string SwitchLabel => ShowObfuscated
+        ? "Show original data"
+        : "Show obfuscated data";
+
+    string SwitchLabelHelper => ShowObfuscated
+        ? "Show original"
+        : "Show obfuscated";
+
+    string SwitchCompactIcon => ShowObfuscated
+        ? Icons.Material.Outlined.Circle
+        : Icons.Material.Filled.BlurOn;
+
+    Task ToggleDisplayedData() => ShowObfuscatedChanged.InvokeAsync(!ShowObfuscated);
 }

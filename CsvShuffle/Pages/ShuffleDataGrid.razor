@@ -17,22 +17,23 @@
             int index = i;
             var selectedMode = GetMode(index);
 
+            string obfIcon = selectedMode == ObfuscationMode.Clear
+                ? Icons.Material.Outlined.Deblur
+                : Icons.Material.Filled.BlurOn;
+
+            var obfColor = selectedMode == ObfuscationMode.Clear
+                ? Color.Default
+                : Color.Primary;
+
             <PropertyColumn T="CsvRow"
                             TProperty="string"
                             Property="@(x => x.Cells[index])"
                             Title="@Headers[index]"
                             CellClass="@GetCellClass(index)">
                 <HeaderTemplate>
-                    @{
-                        string obfIcon = selectedMode == ObfuscationMode.Clear
-                            ? Icons.Material.Outlined.Deblur
-                            : Icons.Material.Filled.BlurOn;
 
-                        var obfColor = selectedMode == ObfuscationMode.Clear
-                            ? Color.Default
-                            : Color.Primary;
-                    }
-                    <MudStack Row Spacing="0"
+                    <MudStack Row
+                              Spacing="0"
                               Justify="Justify.SpaceBetween"
                               AlignItems="AlignItems.Center">
                         <MudText Typo="Typo.body2">
@@ -45,11 +46,10 @@
                                      AriaLabel="@($"Set obfuscation mode for {Headers[index]}")">
                                 @foreach (var mode in Enum.GetValues<ObfuscationMode>())
                                 {
-                                    <MudMenuItem Icon="@(
-                                                       mode == GetMode(index)
-                                                           ? Icons.Material.Filled.Check
-                                                           : null
-                                                       )"
+                                    string? icon = mode == GetMode(index)
+                                        ? Icons.Material.Filled.Check
+                                        : null;
+                                    <MudMenuItem Icon="@icon"
                                                  OnClick="@(() => OnModeChanged.InvokeAsync((index, mode)))">
                                         @ObfuscationModeLabel(mode)
                                     </MudMenuItem>
@@ -97,5 +97,4 @@
     static string ObfuscationModeLabel(ObfuscationMode mode) => mode == ObfuscationMode.BracketPreserving
         ? "Bracket Preserving"
         : mode.ToString();
-
 }
