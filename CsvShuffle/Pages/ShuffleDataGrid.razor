@@ -94,7 +94,10 @@
         ? null
         : "obfuscated-cell";
 
-    static string ObfuscationModeLabel(ObfuscationMode mode) => mode == ObfuscationMode.BracketPreserving
-        ? "Bracket Preserving"
-        : mode.ToString();
+    static string ObfuscationModeLabel(ObfuscationMode mode) => mode switch
+    {
+        ObfuscationMode.BracketPreserving => "Bracket Preserving",
+        ObfuscationMode.GenericOption => "Generic Option",
+        _ => mode.ToString()
+    };
 }
