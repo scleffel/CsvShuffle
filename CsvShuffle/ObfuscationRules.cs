@@ -6,8 +6,14 @@ namespace CsvShuffle;
 
 public static partial class ObfuscationRules
 {
-    static readonly string[] CardinalDirections = ["north", "south", "east", "west"];
-    static readonly string[] CardinalDirectionAbbreviations = ["n", "e", "s", "w"];
+    static readonly string[] CardinalDirections = [
+        "north", "south", "east", "west",
+        "northeast", "northwest", "southeast", "southwest"
+    ];
+    static readonly string[] CardinalDirectionAbbreviations = [
+        "n", "e", "s", "w",
+        "ne", "nw", "se", "sw"
+    ];
 
     static readonly string[] RoadTypes =
     [
@@ -90,21 +96,13 @@ public static partial class ObfuscationRules
 
     public static string TransformGenericOption(
         string value,
-        IReadOnlyList<string> options,
-        int columnIndex,
-        Dictionary<string, string> consistentValues
+        IReadOnlyList<string> options
     )
     {
         if (string.IsNullOrEmpty(value) || options.Count == 0)
             return value;
 
-        string key = $"{ObfuscationMode.GenericOption}|{columnIndex}|{value}";
-        if (consistentValues.TryGetValue(key, out string? prior))
-            return prior;
-
-        string replacement = options[Random.Shared.Next(options.Count)];
-        consistentValues[key] = replacement;
-        return replacement;
+        return options[Random.Shared.Next(options.Count)];
     }
 
     static string TransformText(string value, ObfuscationMode mode, Dictionary<string, string> rowTokens)
