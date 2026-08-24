@@ -35,6 +35,7 @@ always starts with the original input, not a previous result.
 | Relationship | Replaces recognized relationship terms while retaining surrounding text. |
 | Bracket Preserving | Obfuscates outside balanced parentheses, brackets, and braces while leaving their contents unchanged. |
 | Generic | Replaces letters and digits and retains all other characters. |
+| Generic Option | Replaces each exact non-empty value with a randomly selected distinct non-empty value from the same column; blank cells remain blank. |
 
 The app supports quoted CSV fields and dirty values. It keeps headers unchanged and
 preserves field shape wherever the selected mode requires it.

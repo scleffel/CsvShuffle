@@ -45,11 +45,13 @@ public partial class Shuffle : ComponentBase
 
     async Task LoadFile(InputFileChangeEventArgs args)
     {
-        if (_cancellation is not null)
-            await _cancellation.CancelAsync();
+        await CancelActiveOperationAsync();
+        ClearFile();
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
 
-        _cancellation?.Dispose();
-        _cancellation = new CancellationTokenSource();
+        var cancellation = new CancellationTokenSource();
+        _cancellation = cancellation;
         _fileName = args.File.Name;
         _busy = true;
         _progress = 0;
@@ -61,7 +63,7 @@ public partial class Shuffle : ComponentBase
         {
             await using var stream = args.File.OpenReadStream(500_000_000L);
             using var reader = new StreamReader(stream, Encoding.UTF8);
-            string input = await ReadFileAsync(reader, args.File.Size, _cancellation.Token);
+            string input = await ReadFileAsync(reader, args.File.Size, cancellation.Token);
             List<string[]> parsed = ParseCsv(input);
 
             if (parsed.Count == 0)
@@ -80,10 +82,14 @@ public partial class Shuffle : ComponentBase
         }
         catch (OperationCanceledException)
         {
-            _progressLabel = "Loading cancelled.";
+            if (ReferenceEquals(_cancellation, cancellation))
+                _progressLabel = "Loading cancelled.";
         }
         catch (Exception exception)
         {
+            if (!ReferenceEquals(_cancellation, cancellation))
+                return;
+
             _headers.Clear();
             _rows.Clear();
             _gridRows.Clear();
@@ -95,19 +101,28 @@ public partial class Shuffle : ComponentBase
         }
         finally
         {
-            _busy = false;
+            if (ReferenceEquals(_cancellation, cancellation))
+            {
+                _cancellation = null;
+                _busy = false;
+            }
+
+            cancellation.Dispose();
         }
     }
 
     async Task Obfuscate()
     {
+        await CancelActiveOperationAsync();
+
         _busy = true;
         _progress = 0;
         _progressLabel = "Preparing obfuscation…";
         _obfuscatedCsv = null;
         _obfuscatedGridRows.Clear();
         _showObfuscated = false;
-        _cancellation = new CancellationTokenSource();
+        var cancellation = new CancellationTokenSource();
+        _cancellation = cancellation;
 
         try
         {
@@ -125,23 +140,40 @@ public partial class Shuffle : ComponentBase
             }
 
             Dictionary<string, string> consistentValues = [];
+            IReadOnlyList<string>[] genericOptionsByColumn =
+            [
+                .. Enumerable.Range(0, _headers.Count)
+                    .Select(column => _modes[column] == ObfuscationMode.GenericOption
+                        ? _rows.Select(row => row[column])
+                            .Where(value => !string.IsNullOrEmpty(value))
+                            .Distinct(StringComparer.Ordinal)
+                            .ToArray()
+                        : [])
+            ];
             StringBuilder output = new();
             List<CsvRow> obfuscatedRows = [];
             output.AppendLine(string.Join(',', _headers.Select(EncodeCsv)));
 
             for (int rowIndex = 0; rowIndex < _rows.Count; rowIndex++)
             {
-                _cancellation.Token.ThrowIfCancellationRequested();
+                cancellation.Token.ThrowIfCancellationRequested();
                 Dictionary<string, string> rowTokens = [];
 
                 string[] values =
                 [
-                    .. _rows[rowIndex].Select((value, column) => ObfuscationRules.Transform(
-                        value,
-                        _modes[column],
-                        consistentValues,
-                        rowTokens
-                    ))
+                    .. _rows[rowIndex].Select((value, column) => _modes[column] == ObfuscationMode.GenericOption
+                        ? ObfuscationRules.TransformGenericOption(
+                            value,
+                            genericOptionsByColumn[column],
+                            column,
+                            consistentValues
+                        )
+                        : ObfuscationRules.Transform(
+                            value,
+                            _modes[column],
+                            consistentValues,
+                            rowTokens
+                        ))
                 ];
 
                 obfuscatedRows.Add(new CsvRow(values));
@@ -165,10 +197,14 @@ public partial class Shuffle : ComponentBase
         }
         catch (OperationCanceledException)
         {
-            _progressLabel = "Obfuscation cancelled.";
+            if (ReferenceEquals(_cancellation, cancellation))
+                _progressLabel = "Obfuscation cancelled.";
         }
         catch (Exception exception)
         {
+            if (!ReferenceEquals(_cancellation, cancellation))
+                return;
+
             _obfuscatedCsv = null;
             _obfuscatedGridRows.Clear();
             _showObfuscated = false;
@@ -177,7 +213,13 @@ public partial class Shuffle : ComponentBase
         }
         finally
         {
-            _busy = false;
+            if (ReferenceEquals(_cancellation, cancellation))
+            {
+                _cancellation = null;
+                _busy = false;
+            }
+
+            cancellation.Dispose();
         }
     }
 
@@ -214,6 +256,12 @@ public partial class Shuffle : ComponentBase
         _originalCsv = null;
         _obfuscatedCsv = null;
         _showObfuscated = false;
+    }
+
+    async Task CancelActiveOperationAsync()
+    {
+        if (_cancellation is not null)
+            await _cancellation.CancelAsync();
     }
 
     void Cancel() => _cancellation?.Cancel();

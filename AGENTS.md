@@ -9,6 +9,7 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
 
 ## Current release
 
+- The current release is **1.5.0**.
 - `CsvShuffle/Version.props` is the single source of release version information.
   Maintain `Version`, `AssemblyVersion`, and `FileVersion` together when preparing a
   later release. The header displays `InformationalVersion`.
@@ -64,8 +65,9 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
 - **Phone:** replace digits while preserving the input shape; retain a leading country
   digit and valid NANP leading digits where the specialized rule applies. Identical phone
   values must use the same replacement within one output.
-- **Address:** retain address-unit terms and convert cardinal directions to another
-  cardinal direction; otherwise apply vowel/consonant letter replacement and digit
+- **Address:** retain address-unit terms; convert cardinal directions and recognized road
+  types (including full and abbreviated forms) to another direction or road type while
+  preserving casing; otherwise apply vowel/consonant letter replacement and digit
   replacement while preserving other characters.
 - **Email:** obfuscate the local part and domain labels, retain the `@`/dot structure,
   and replace recognized top-level domains with another supported TLD. Identical values
@@ -76,6 +78,10 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
   and `{}` content; retain bracketed content unchanged.
 - **Generic:** replace letters with letters and digits with digits; preserve all other
   characters.
+- **Generic Option:** replace each exact, non-empty cell value with a randomly selected
+  distinct non-empty value from the same column. Matching source values must map
+  consistently within an output; comparison is case-sensitive, and blank cells remain
+  blank.
 
 ## Workflow expectations
 

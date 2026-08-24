@@ -8,6 +8,22 @@ public static partial class ObfuscationRules
 {
     static readonly string[] CardinalDirections = ["north", "south", "east", "west"];
     static readonly string[] CardinalDirectionAbbreviations = ["n", "e", "s", "w"];
+
+    static readonly string[] RoadTypes =
+    [
+        "street", "avenue", "parkway", "road", "way", "park", "place", "highway",
+        "boulevard", "drive", "lane", "court", "circle", "terrace", "trail", "square",
+        "center", "crossing", "loop", "path", "point", "row", "trace", "turnpike"
+    ];
+
+    static readonly string[] RoadTypeAbbreviations =
+    [
+        "st", "ave", "pkwy", "rd", "wy", "pk", "pl", "hwy",
+        "blvd", "dr", "ln", "ct", "cir", "ter", "trl", "sq", "ctr", "xing", "lp",
+        "pt", "trce", "tpke"
+    ];
+
+    static readonly string[] RoadTypeAbbreviationAliases = ["pky", "pkw"];
     static readonly string[] AddressUnitTerms = ["apt", "apartment", "suite", "ste", "unit", "floor", "fl"];
     static readonly string[] SinglePartTlds = ["com", "net", "org", "dev", "io", "ai", "app"];
     static readonly string[] MultiPartTlds = ["co.uk", "co.br", "com.au", "co.nz", "co.jp"];
@@ -18,8 +34,17 @@ public static partial class ObfuscationRules
         "child", "son", "daughter", "mother", "father", "sibling", "brother", "sister", "aunt", "uncle",
         "cousin", "grandparent", "grandmother", "grandfather", "niece", "nephew", "relative"
     ];
+
     static readonly HashSet<string> CardinalDirectionSet = new(CardinalDirections, StringComparer.OrdinalIgnoreCase);
-    static readonly HashSet<string> CardinalDirectionAbbreviationSet = new(CardinalDirectionAbbreviations, StringComparer.OrdinalIgnoreCase);
+
+    static readonly HashSet<string> CardinalDirectionAbbreviationSet =
+        new(CardinalDirectionAbbreviations, StringComparer.OrdinalIgnoreCase);
+
+    static readonly HashSet<string> RoadTypeSet = new(RoadTypes, StringComparer.OrdinalIgnoreCase);
+
+    static readonly HashSet<string> RoadTypeAbbreviationSet =
+        new([.. RoadTypeAbbreviations, .. RoadTypeAbbreviationAliases], StringComparer.OrdinalIgnoreCase);
+
     static readonly HashSet<string> AddressUnitTermSet = new(AddressUnitTerms, StringComparer.OrdinalIgnoreCase);
     static readonly HashSet<string> RelationshipTermSet = new(RelationshipTerms, StringComparer.OrdinalIgnoreCase);
 
@@ -61,6 +86,25 @@ public static partial class ObfuscationRules
 
         consistentValues[key] = transformed;
         return transformed;
+    }
+
+    public static string TransformGenericOption(
+        string value,
+        IReadOnlyList<string> options,
+        int columnIndex,
+        Dictionary<string, string> consistentValues
+    )
+    {
+        if (string.IsNullOrEmpty(value) || options.Count == 0)
+            return value;
+
+        string key = $"{ObfuscationMode.GenericOption}|{columnIndex}|{value}";
+        if (consistentValues.TryGetValue(key, out string? prior))
+            return prior;
+
+        string replacement = options[Random.Shared.Next(options.Count)];
+        consistentValues[key] = replacement;
+        return replacement;
     }
 
     static string TransformText(string value, ObfuscationMode mode, Dictionary<string, string> rowTokens)
@@ -195,6 +239,17 @@ public static partial class ObfuscationRules
                 {
                     result.Append(PreserveCasing(token, RandomOther(CardinalDirectionAbbreviations, token)));
                 }
+                else if (RoadTypeSet.Contains(token))
+                {
+                    result.Append(PreserveCasing(token, RandomOther(RoadTypes, token)));
+                }
+                else if (RoadTypeAbbreviationSet.Contains(token))
+                {
+                    result.Append(
+                        PreserveCasing(token,
+                            RandomOther(RoadTypeAbbreviations, CanonicalRoadTypeAbbreviation(token)))
+                    );
+                }
                 else
                 {
                     result.Append(TransformAddressLetters(token, rowTokens));
@@ -234,6 +289,12 @@ public static partial class ObfuscationRules
         return replacement;
     }
 
+    static string CanonicalRoadTypeAbbreviation(string token) =>
+        token.Equals("pky", StringComparison.OrdinalIgnoreCase) ||
+        token.Equals("pkw", StringComparison.OrdinalIgnoreCase)
+            ? "pkwy"
+            : token;
+
     static string TransformEmail(string value, Dictionary<string, string> rowTokens)
     {
         int atIndex = value.LastIndexOf('@');
@@ -246,8 +307,12 @@ public static partial class ObfuscationRules
             return TransformText(value, ObfuscationMode.Generic, rowTokens);
 
         string twoPartSuffix = labels.Length >= 2 ? string.Join('.', labels[^2..]) : string.Empty;
-        int tldLabelCount = MultiPartTlds.Contains(twoPartSuffix, StringComparer.OrdinalIgnoreCase) ? 2 : 1;
+        int tldLabelCount = MultiPartTlds.Contains(twoPartSuffix, StringComparer.OrdinalIgnoreCase)
+            ? 2
+            : 1;
+
         string sourceTld = string.Join('.', labels[^tldLabelCount..]).ToLowerInvariant();
+
         string replacementTld = tldLabelCount == 2
             ? RandomOther(MultiPartTlds, sourceTld)
             : RandomOther(SinglePartTlds, sourceTld);

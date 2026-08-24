@@ -11,5 +11,6 @@ public enum ObfuscationMode
     Email,
     Relationship,
     BracketPreserving,
-    Generic
+    Generic,
+    GenericOption
 }
