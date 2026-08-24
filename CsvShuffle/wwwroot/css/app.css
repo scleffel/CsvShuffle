@@ -63,6 +63,14 @@ body {
   cursor: pointer;
 }
 
+.file-input--offscreen {
+  position: fixed;
+  inset: auto;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+}
+
 .mud-button-label {
   position: relative;
 }

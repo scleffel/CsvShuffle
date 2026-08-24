@@ -50,15 +50,17 @@
                        OnChange="@OnFileSelected"
                        accept=".csv,text/csv"/>
         </MudButton>
+        <InputFile id="compact-csv-file-input"
+                   class="file-input file-input--offscreen"
+                   OnChange="@OnFileSelected"
+                   accept=".csv,text/csv"/>
         <MudTooltip Text="Select CSV">
             <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
                            Color="Color.Primary"
                            Class="browse-csv-button browse-csv-button--compact"
                            HtmlTag="label"
+                           for="compact-csv-file-input"
                            aria-label="Select CSV">
-                <InputFile class="file-input"
-                           OnChange="@OnFileSelected"
-                           accept=".csv,text/csv"/>
             </MudIconButton>
         </MudTooltip>
         <MudTooltip Text="Cycle color mode: System, Light, Dark">
