@@ -9,7 +9,7 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
 
 ## Current release
 
-- The current release is **1.5.0**.
+- The current release is **1.5.1**.
 - `CsvShuffle/Version.props` is the single source of release version information.
   Maintain `Version`, `AssemblyVersion`, and `FileVersion` together when preparing a
   later release. The header displays `InformationalVersion`.
@@ -78,10 +78,9 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
   and `{}` content; retain bracketed content unchanged.
 - **Generic:** replace letters with letters and digits with digits; preserve all other
   characters.
-- **Generic Option:** replace each exact, non-empty cell value with a randomly selected
-  distinct non-empty value from the same column. Matching source values must map
-  consistently within an output; comparison is case-sensitive, and blank cells remain
-  blank.
+- **Generic Option:** replace each non-empty cell independently with a randomly selected
+  distinct non-empty value from the same column. Comparison is case-sensitive, and blank
+  cells remain blank.
 
 ## Workflow expectations
 

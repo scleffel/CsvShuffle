@@ -164,9 +164,7 @@ public partial class Shuffle : ComponentBase
                     .. _rows[rowIndex].Select((value, column) => _modes[column] == ObfuscationMode.GenericOption
                         ? ObfuscationRules.TransformGenericOption(
                             value,
-                            genericOptionsByColumn[column],
-                            column,
-                            consistentValues
+                            genericOptionsByColumn[column]
                         )
                         : ObfuscationRules.Transform(
                             value,
