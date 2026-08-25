@@ -27,6 +27,7 @@ always starts with the original input, not a previous result.
 | --- | --- |
 | Clear | Leaves the value unchanged. |
 | Name | Replaces letters while retaining case, vowel/consonant class, and non-letters. |
+| Middle Name | Applies the Name behavior while leaving `NMN` (no middle name) unchanged. |
 | SSN | Replaces digits while retaining all non-digit characters; duplicate values remain consistent in an output. |
 | Date | Changes valid dates by up to ±10 days, ±2 months, and ±5 years while keeping a valid date. |
 | Phone | Replaces digits while retaining formatting; duplicate values remain consistent in an output. |

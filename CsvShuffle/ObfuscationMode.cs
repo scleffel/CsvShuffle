@@ -4,6 +4,7 @@ public enum ObfuscationMode
 {
     Clear,
     Name,
+    MiddleName,
     Ssn,
     Date,
     Phone,

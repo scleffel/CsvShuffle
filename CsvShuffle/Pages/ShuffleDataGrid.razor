@@ -96,6 +96,7 @@
 
     static string ObfuscationModeLabel(ObfuscationMode mode) => mode switch
     {
+        ObfuscationMode.MiddleName => "Middle Name",
         ObfuscationMode.BracketPreserving => "Bracket Preserving",
         ObfuscationMode.GenericOption => "Generic Option",
         _ => mode.ToString()
