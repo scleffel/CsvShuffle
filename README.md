@@ -33,10 +33,12 @@ always starts with the original input, not a previous result.
 | Phone | Replaces digits while retaining formatting; duplicate values remain consistent in an output. |
 | Address | Obfuscates address letters and digits while retaining formatting, address-unit terms, and cardinal-direction semantics. |
 | Email | Obfuscates the local part and domain while retaining email structure. |
+| UPN | Obfuscates only the name or ID before `@` using Generic rules; retains the domain and TLD. |
+| EOP | Obfuscates the name using Generic rules, replaces the first domain label with another value from the column, and retains the final two domain labels. |
 | Relationship | Replaces recognized relationship terms while retaining surrounding text. |
 | Bracket Preserving | Obfuscates outside balanced parentheses, brackets, and braces while leaving their contents unchanged. |
 | Generic | Replaces letters and digits and retains all other characters. |
-| Generic Option | Replaces each non-empty cell independently with a randomly selected distinct non-empty value from the same column; blank cells remain blank. |
+| Generic Option | Replaces each non-empty cell independently with another non-empty value from the same column when available; blank cells remain blank. |
 
 The app supports quoted CSV fields and dirty values. It keeps headers unchanged and
 preserves field shape wherever the selected mode requires it.

@@ -10,6 +10,8 @@ public enum ObfuscationMode
     Phone,
     Address,
     Email,
+    UpnAddress,
+    EopEmail,
     Relationship,
     BracketPreserving,
     Generic,
