@@ -9,7 +9,7 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
 
 ## Current release
 
-- The current release is **1.7.0**.
+- The current release is **1.7.1**.
 - `CsvShuffle/Version.props` is the single source of release version information.
   Maintain `Version`, `AssemblyVersion`, and `FileVersion` together when preparing a
   later release. The header displays `InformationalVersion`.
