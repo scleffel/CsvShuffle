@@ -74,6 +74,12 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
 - **Email:** obfuscate the local part and domain labels, retain the `@`/dot structure,
   and replace recognized top-level domains with another supported TLD. Identical values
   must use the same replacement within one output.
+- **UPN:** for a value in `{name-or-ID}@{domain}.{tld}` form, apply the Generic rule to
+  the portion before `@` and retain the domain and TLD exactly. For an invalid value, use
+  the Generic rule for the complete value.
+- **EOP:** for a value in `{name}@{dom0}.{dom1}.{tld}` form, apply the Generic rule to
+  the name, replace `dom0` with a distinct `dom0` selected from that column, and retain
+  `{dom1}.{tld}` exactly. For an invalid value, use the Generic rule for the complete value.
 - **Relationship:** replace recognized relationship terms while retaining surrounding
   text and casing. Identical values must use the same replacement within one output.
 - **Bracket Preserving:** use the vowel/consonant text rule outside balanced `()`, `[]`,
@@ -81,8 +87,8 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
 - **Generic:** replace letters with letters and digits with digits; preserve all other
   characters.
 - **Generic Option:** replace each non-empty cell independently with a randomly selected
-  distinct non-empty value from the same column. Comparison is case-sensitive, and blank
-  cells remain blank.
+  distinct non-empty value from the same column when one is available. Comparison is
+  case-sensitive, and blank cells remain blank.
 
 ## Workflow expectations
 

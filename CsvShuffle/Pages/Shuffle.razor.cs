@@ -9,8 +9,11 @@ namespace CsvShuffle.Pages;
 
 public partial class Shuffle : ComponentBase
 {
-    [Inject] ISnackbar Snackbar { get; set; } = null!;
-    [Inject] IDialogService DialogService { get; set; } = null!;
+    [Inject]
+    ISnackbar Snackbar { get; set; } = null!;
+
+    [Inject]
+    IDialogService DialogService { get; set; } = null!;
 
     string _fileName = string.Empty;
     string _search = string.Empty;
@@ -27,8 +30,7 @@ public partial class Shuffle : ComponentBase
     List<ObfuscationMode> _modes = [];
     bool _showObfuscated;
 
-    static string AppVersion => typeof(Shuffle)
-                                    .Assembly
+    static string AppVersion => typeof(Shuffle).Assembly
                                     .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                                     .InformationalVersion
                                 ?? "unknown";
@@ -150,6 +152,16 @@ public partial class Shuffle : ComponentBase
                             .ToArray()
                         : [])
             ];
+            IReadOnlyList<string>[] eopDomainOptionsByColumn =
+            [
+                .. Enumerable.Range(0, _headers.Count)
+                    .Select(column => _modes[column] == ObfuscationMode.EopEmail
+                        ? _rows.Select(row => ObfuscationRules.GetEopDomainOption(row[column]))
+                            .OfType<string>()
+                            .Distinct(StringComparer.Ordinal)
+                            .ToArray()
+                        : [])
+            ];
             StringBuilder output = new();
             List<CsvRow> obfuscatedRows = [];
             output.AppendLine(string.Join(',', _headers.Select(EncodeCsv)));
@@ -161,17 +173,24 @@ public partial class Shuffle : ComponentBase
 
                 string[] values =
                 [
-                    .. _rows[rowIndex].Select((value, column) => _modes[column] == ObfuscationMode.GenericOption
-                        ? ObfuscationRules.TransformGenericOption(
+                    .. _rows[rowIndex].Select((value, column) => _modes[column] switch
+                    {
+                        ObfuscationMode.GenericOption => ObfuscationRules.TransformGenericOption(
                             value,
                             genericOptionsByColumn[column]
-                        )
-                        : ObfuscationRules.Transform(
+                        ),
+                        ObfuscationMode.EopEmail => ObfuscationRules.TransformEop(
+                            value,
+                            eopDomainOptionsByColumn[column],
+                            rowTokens
+                        ),
+                        _ => ObfuscationRules.Transform(
                             value,
                             _modes[column],
                             consistentValues,
                             rowTokens
-                        ))
+                        )
+                    })
                 ];
 
                 obfuscatedRows.Add(new CsvRow(values));

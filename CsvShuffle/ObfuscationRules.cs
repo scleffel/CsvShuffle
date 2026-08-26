@@ -69,6 +69,9 @@ public static partial class ObfuscationRules
             && string.Equals(value.Trim(), "NMN", StringComparison.OrdinalIgnoreCase))
             return value;
 
+        if (mode == ObfuscationMode.UpnAddress)
+            return TransformUpn(value, rowTokens);
+
         if (mode is not (
             ObfuscationMode.Phone
             or ObfuscationMode.Ssn
@@ -107,7 +110,28 @@ public static partial class ObfuscationRules
         if (string.IsNullOrEmpty(value) || options.Count == 0)
             return value;
 
-        return options[Random.Shared.Next(options.Count)];
+        string[] alternatives = [.. options.Where(option => !option.Equals(value, StringComparison.Ordinal))];
+        return alternatives.Length == 0
+            ? value
+            : alternatives[Random.Shared.Next(alternatives.Length)];
+    }
+
+    public static string? GetEopDomainOption(string value) =>
+        TryGetEopParts(value, out _, out string domain, out _)
+            ? domain
+            : null;
+
+    public static string TransformEop(
+        string value,
+        IReadOnlyList<string> domainOptions,
+        Dictionary<string, string> rowTokens
+    )
+    {
+        if (!TryGetEopParts(value, out string localPart, out string domain, out string preservedSuffix))
+            return TransformText(value, ObfuscationMode.Generic, rowTokens);
+
+        return $"{TransformText(localPart, ObfuscationMode.Generic, rowTokens)}@" +
+               $"{TransformGenericOption(domain, domainOptions)}.{preservedSuffix}";
     }
 
     static string TransformText(string value, ObfuscationMode mode, Dictionary<string, string> rowTokens)
@@ -331,6 +355,47 @@ public static partial class ObfuscationRules
         ];
 
         return $"{localPart}@{string.Join('.', transformedLabels)}";
+    }
+
+    static string TransformUpn(string value, Dictionary<string, string> rowTokens)
+    {
+        int atIndex = value.LastIndexOf('@');
+        if (atIndex <= 0 || atIndex != value.IndexOf('@') || atIndex == value.Length - 1 ||
+            !HasDomainAndTld(value[(atIndex + 1)..]))
+            return TransformText(value, ObfuscationMode.Generic, rowTokens);
+
+        return $"{TransformText(value[..atIndex], ObfuscationMode.Generic, rowTokens)}@{value[(atIndex + 1)..]}";
+    }
+
+    static bool TryGetEopParts(
+        string value,
+        out string localPart,
+        out string domain,
+        out string preservedSuffix
+    )
+    {
+        localPart = string.Empty;
+        domain = string.Empty;
+        preservedSuffix = string.Empty;
+
+        int atIndex = value.LastIndexOf('@');
+        if (atIndex <= 0 || atIndex != value.IndexOf('@') || atIndex == value.Length - 1)
+            return false;
+
+        string[] labels = value[(atIndex + 1)..].Split('.');
+        if (labels.Length != 3 || labels.Any(label => label.Length == 0))
+            return false;
+
+        localPart = value[..atIndex];
+        domain = labels[0];
+        preservedSuffix = string.Join('.', labels[1..]);
+        return true;
+    }
+
+    static bool HasDomainAndTld(string value)
+    {
+        string[] labels = value.Split('.');
+        return labels.Length >= 2 && labels.All(label => label.Length > 0);
     }
 
     static string TransformRelationship(string value) =>
