@@ -83,6 +83,9 @@
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Variant="Variant.Outlined"
                       Class="global-search"/>
+        <SkipForPopover SkipForTermGroups="@SkipForTermGroups"
+                        OnSkipTermAdded="@OnSkipTermAdded"
+                        OnSkipTermRemoved="@OnSkipTermRemoved"/>
         @if (Busy)
         {
             <MudButton Variant="Variant.Text"
@@ -147,6 +150,9 @@
     [Parameter] public EventCallback<bool> ShowObfuscatedChanged { get; set; }
     [Parameter] public string Search { get; set; } = string.Empty;
     [Parameter] public EventCallback<string?> SearchChanged { get; set; }
+    [Parameter] public IReadOnlyList<SkipForTermGroup> SkipForTermGroups { get; set; } = [];
+    [Parameter] public EventCallback<(int? ColumnIndex, string Term)> OnSkipTermAdded { get; set; }
+    [Parameter] public EventCallback<(int? ColumnIndex, string Term)> OnSkipTermRemoved { get; set; }
     [Parameter] public EventCallback OnClear { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback OnObfuscate { get; set; }
@@ -165,4 +171,5 @@
         : Icons.Material.Filled.BlurOn;
 
     Task ToggleDisplayedData() => ShowObfuscatedChanged.InvokeAsync(!ShowObfuscated);
+
 }

@@ -5,6 +5,7 @@ public enum ObfuscationMode
     Clear,
     Name,
     MiddleName,
+    SkipFor,
     Ssn,
     Date,
     Phone,

@@ -1,0 +1,114 @@
+<MudMenu @ref="@_menu"
+         AnchorOrigin="Origin.BottomCenter"
+         TransformOrigin="Origin.TopCenter"
+         PopoverFixed>
+    <ActivatorContent Context="menu">
+        <MudTooltip Text="Manage Skip For terms">
+            <MudIconButton Icon="@Icons.Material.Filled.Texture"
+                           Color="Color.Primary"
+                           aria-label="Manage Skip For terms"
+                           OnClick="@menu.ToggleAsync"/>
+        </MudTooltip>
+    </ActivatorContent>
+    <ChildContent>
+        <MudPaper Class="skip-for-popover pa-2"
+                  Elevation="8"
+                  @onclick:stopPropagation>
+            <MudTabs @bind-ActivePanelIndex="@_activeTab"
+                     ApplyEffectsToContainer>
+                @foreach (var group in SkipForTermGroups)
+                {
+                    <MudTabPanel @key="@group.ColumnIndex"
+                                 Text="@group.Name">
+                        <MudPaper Elevation="2"
+                                  Class="pa-2 mt-1"
+                                  Outlined>
+                            <MudStack Row
+                                      Spacing="1"
+                                      AlignItems="AlignItems.Center">
+                                <MudTooltip Text="Close">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                   aria-label="Close Skip For terms"
+                                                   OnClick="@CloseMenuAsync"/>
+                                </MudTooltip>
+                                <MudTextField @bind-Value="@_term"
+                                              Immediate
+                                              Margin="Margin.Dense"
+                                              Placeholder="Term to exclude"
+                                              aria-label="Term to exclude from Skip For"
+                                              Variant="Variant.Outlined"
+                                              OnKeyDown="@(args => HandleTermKeyDown(args, group.ColumnIndex))"/>
+                                <MudTooltip Text="Exclude term">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Block"
+                                                   Color="Color.Primary"
+                                                   Disabled="@string.IsNullOrWhiteSpace(_term)"
+                                                   aria-label="Exclude term"
+                                                   OnClick="@(() => AddTermAsync(group.ColumnIndex))"/>
+                                </MudTooltip>
+                            </MudStack>
+                            <MudPaper Class="skip-for-terms pa-2 mt-2">
+                                @if (group.Terms.Count == 0)
+                                {
+                                    <MudText Typo="Typo.caption">
+                                        No excluded terms.
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudChipSet T="string"
+                                                Class="skip-for-chip-set">
+                                        @foreach (string term in group.Terms.Order(StringComparer.OrdinalIgnoreCase))
+                                        {
+                                            Func<Task> evtCallback = () =>
+                                                OnSkipTermRemoved.InvokeAsync((group.ColumnIndex, term));
+                                            <MudChip T="string"
+                                                     Value="@term"
+                                                     Variant="Variant.Outlined"
+                                                     Color="Color.Primary"
+                                                     CloseIcon="@Icons.Material.Filled.Close"
+                                                     OnClose="@evtCallback">
+                                            <span class="skip-for-chip-term">
+                                                @term
+                                            </span>
+                                            </MudChip>
+                                        }
+                                    </MudChipSet>
+                                }
+                            </MudPaper>
+                        </MudPaper>
+                    </MudTabPanel>
+                }
+            </MudTabs>
+        </MudPaper>
+    </ChildContent>
+</MudMenu>
+
+@code {
+    MudMenu? _menu;
+    int _activeTab;
+    string _term = string.Empty;
+
+    [Parameter] public IReadOnlyList<SkipForTermGroup> SkipForTermGroups { get; set; } = [];
+    [Parameter] public EventCallback<(int? ColumnIndex, string Term)> OnSkipTermAdded { get; set; }
+    [Parameter] public EventCallback<(int? ColumnIndex, string Term)> OnSkipTermRemoved { get; set; }
+
+    async Task AddTermAsync(int? columnIndex)
+    {
+        string term = _term.Trim();
+        if (term.Length == 0)
+            return;
+
+        await OnSkipTermAdded.InvokeAsync((columnIndex, term));
+        _term = string.Empty;
+    }
+
+    async Task HandleTermKeyDown(KeyboardEventArgs args, int? columnIndex)
+    {
+        if (args.Key == "Enter")
+            await AddTermAsync(columnIndex);
+        else if (args.Key == "Escape")
+            await CloseMenuAsync();
+    }
+
+    Task CloseMenuAsync() => _menu?.CloseMenuAsync() ?? Task.CompletedTask;
+}

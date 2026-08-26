@@ -61,12 +61,17 @@ public static partial class ObfuscationRules
         string value,
         ObfuscationMode mode,
         Dictionary<string, string> consistentValues,
-        Dictionary<string, string> rowTokens
+        Dictionary<string, string> rowTokens,
+        IReadOnlyCollection<string>? skipTerms = null
     )
     {
         if (mode == ObfuscationMode.Clear || string.IsNullOrEmpty(value) ||
             mode == ObfuscationMode.MiddleName
-            && string.Equals(value.Trim(), "NMN", StringComparison.OrdinalIgnoreCase))
+            && string.Equals(value.Trim(), "NMN", StringComparison.OrdinalIgnoreCase) ||
+            mode == ObfuscationMode.SkipFor && skipTerms?.Any(term =>
+                term.Length > 0 &&
+                value.Contains(term, StringComparison.OrdinalIgnoreCase)) == true
+           )
             return value;
 
         if (mode == ObfuscationMode.UpnAddress)
@@ -140,6 +145,7 @@ public static partial class ObfuscationRules
         bool preserveVowelClass =
             mode is ObfuscationMode.Name
                 or ObfuscationMode.MiddleName
+                or ObfuscationMode.SkipFor
                 or ObfuscationMode.Address
                 or ObfuscationMode.BracketPreserving;
         int bracketDepth = 0;
@@ -464,9 +470,6 @@ public static partial class ObfuscationRules
             .ToString("M/d/yyyy", CultureInfo.InvariantCulture);
     }
 
-    [GeneratedRegex(
-        @"(?<!\p{L})([\p{L}/]+)(?!\p{L})",
-        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
-    )]
+    [GeneratedRegex(@"(?<!\p{L})([\p{L}/]+)(?!\p{L})", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex RelationshipRegex();
 }

@@ -12,6 +12,8 @@ to a server, collect telemetry, or log its contents.
 1. Select a CSV file (up to 500 MB; UTF-8 is recommended).
 2. For each sensitive column, choose an obfuscation mode from its column header. Every
    column begins as **Clear**.
+   For **Skip For**, use the toolbar's exclusions control to manage terms shared by all
+   Skip For columns or terms specific to an individual selected column.
 3. Use the global search, column filters, sorting, resizing, and paging controls to
    inspect the data. The table supports 100, 500, and 1000 rows per page.
 4. Choose **Obfuscate** to generate the obfuscated preview. You can switch between the
@@ -28,6 +30,7 @@ always starts with the original input, not a previous result.
 | Clear | Leaves the value unchanged. |
 | Name | Replaces letters while retaining case, vowel/consonant class, and non-letters. |
 | Middle Name | Applies the Name behavior while leaving `NMN` (no middle name) unchanged. |
+| Skip For | Applies the Middle Name behavior, except cells containing configured exclusions remain unchanged. Global exclusions apply to every Skip For column; each selected column can also have its own exclusions. |
 | SSN | Replaces digits while retaining all non-digit characters; duplicate values remain consistent in an output. |
 | Date | Changes valid dates by up to ±10 days, ±2 months, and ±5 years while keeping a valid date. |
 | Phone | Replaces digits while retaining formatting; duplicate values remain consistent in an output. |
