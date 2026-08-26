@@ -9,7 +9,7 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
 
 ## Current release
 
-- The current release is **1.5.1**.
+- The current release is **1.5.2**.
 - `CsvShuffle/Version.props` is the single source of release version information.
   Maintain `Version`, `AssemblyVersion`, and `FileVersion` together when preparing a
   later release. The header displays `InformationalVersion`.
@@ -57,6 +57,8 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
 
 - **Name:** replace letters while retaining case and vowel/consonant class; preserve
   non-letters.
+- **Middle Name:** apply the Name rule, except preserve `NMN` (case-insensitive, with
+  surrounding whitespace retained) unchanged.
 - **Date:** parse valid date/date-time values and vary day by ±10 days, month by ±2
   months, and year by ±5 years while producing a valid date. For an unparseable value,
   use the generic text behavior.
