@@ -6,11 +6,14 @@ namespace CsvShuffle;
 
 public static partial class ObfuscationRules
 {
-    static readonly string[] CardinalDirections = [
+    static readonly string[] CardinalDirections =
+    [
         "north", "south", "east", "west",
         "northeast", "northwest", "southeast", "southwest"
     ];
-    static readonly string[] CardinalDirectionAbbreviations = [
+
+    static readonly string[] CardinalDirectionAbbreviations =
+    [
         "n", "e", "s", "w",
         "ne", "nw", "se", "sw"
     ];
@@ -19,7 +22,7 @@ public static partial class ObfuscationRules
     [
         "street", "avenue", "parkway", "road", "way", "park", "place", "highway",
         "boulevard", "drive", "lane", "court", "circle", "terrace", "trail", "square",
-        "center", "crossing", "loop", "path", "point", "row", "trace", "turnpike"
+        "center", "crossing", "loop", "path", "point", "row", "trace", "turnpike", "turn"
     ];
 
     static readonly string[] RoadTypeAbbreviations =
@@ -61,7 +64,9 @@ public static partial class ObfuscationRules
         Dictionary<string, string> rowTokens
     )
     {
-        if (mode == ObfuscationMode.Clear || string.IsNullOrEmpty(value))
+        if (mode == ObfuscationMode.Clear || string.IsNullOrEmpty(value) ||
+            mode == ObfuscationMode.MiddleName
+            && string.Equals(value.Trim(), "NMN", StringComparison.OrdinalIgnoreCase))
             return value;
 
         if (mode is not (
@@ -109,7 +114,10 @@ public static partial class ObfuscationRules
     {
         var result = new StringBuilder(value.Length);
         bool preserveVowelClass =
-            mode is ObfuscationMode.Name or ObfuscationMode.Address or ObfuscationMode.BracketPreserving;
+            mode is ObfuscationMode.Name
+                or ObfuscationMode.MiddleName
+                or ObfuscationMode.Address
+                or ObfuscationMode.BracketPreserving;
         int bracketDepth = 0;
         bool hasAddressDigits = false;
 
