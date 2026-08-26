@@ -9,7 +9,7 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
 
 ## Current release
 
-- The current release is **1.5.2**.
+- The current release is **1.7.0**.
 - `CsvShuffle/Version.props` is the single source of release version information.
   Maintain `Version`, `AssemblyVersion`, and `FileVersion` together when preparing a
   later release. The header displays `InformationalVersion`.
@@ -59,6 +59,9 @@ keep changes focused, fast, accessible, and free of decorative or marketing-styl
   non-letters.
 - **Middle Name:** apply the Name rule, except preserve `NMN` (case-insensitive, with
   surrounding whitespace retained) unchanged.
+- **Skip For:** apply the Middle Name rule, except preserve a cell unchanged when it
+  contains a configured exclusion (case-insensitive). Global exclusions apply to every
+  Skip For column, while a selected Skip For column can also have its own exclusions.
 - **Date:** parse valid date/date-time values and vary day by ±10 days, month by ±2
   months, and year by ±5 years while producing a valid date. For an unparseable value,
   use the generic text behavior.

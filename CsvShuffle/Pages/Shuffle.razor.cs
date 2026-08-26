@@ -9,11 +9,9 @@ namespace CsvShuffle.Pages;
 
 public partial class Shuffle : ComponentBase
 {
-    [Inject]
-    ISnackbar Snackbar { get; set; } = null!;
+    [Inject] ISnackbar Snackbar { get; set; } = null!;
 
-    [Inject]
-    IDialogService DialogService { get; set; } = null!;
+    [Inject] IDialogService DialogService { get; set; } = null!;
 
     string _fileName = string.Empty;
     string _search = string.Empty;
@@ -28,6 +26,8 @@ public partial class Shuffle : ComponentBase
     List<CsvRow> _gridRows = [];
     List<CsvRow> _obfuscatedGridRows = [];
     List<ObfuscationMode> _modes = [];
+    readonly HashSet<string> _globalSkipTerms = new(StringComparer.OrdinalIgnoreCase);
+    readonly Dictionary<int, HashSet<string>> _skipTermsByColumn = [];
     bool _showObfuscated;
 
     static string AppVersion => typeof(Shuffle).Assembly
@@ -43,7 +43,49 @@ public partial class Shuffle : ComponentBase
         ? "Up to 500 MB · UTF-8 recommended"
         : _progressLabel;
 
-    void SetObfuscationMode(int columnIndex, ObfuscationMode mode) => _modes[columnIndex] = mode;
+    void SetObfuscationMode(int columnIndex, ObfuscationMode mode)
+    {
+        _modes[columnIndex] = mode;
+        if (mode == ObfuscationMode.SkipFor)
+            _skipTermsByColumn.TryAdd(columnIndex, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+    }
+
+    IReadOnlyList<SkipForTermGroup> SkipForTermGroups =>
+    [
+        new(null, "Global", _globalSkipTerms),
+        .. _modes
+            .Select((mode, columnIndex) => (mode, columnIndex))
+            .Where(selection => selection.mode == ObfuscationMode.SkipFor)
+            .Select(selection => new SkipForTermGroup(
+                selection.columnIndex,
+                _headers[selection.columnIndex],
+                _skipTermsByColumn[selection.columnIndex]
+            ))
+    ];
+
+    void AddSkipTerm((int? ColumnIndex, string Term) change)
+    {
+        string normalizedTerm = change.Term.Trim().ToLowerInvariant();
+        if (normalizedTerm.Length > 0)
+            GetSkipTerms(change.ColumnIndex).Add(normalizedTerm);
+    }
+
+    void RemoveSkipTerm((int? ColumnIndex, string Term) change) =>
+        GetSkipTerms(change.ColumnIndex).Remove(change.Term);
+
+    HashSet<string> GetSkipTerms(int? columnIndex) => columnIndex is { } column
+        ? _skipTermsByColumn.GetValueOrDefault(column) ??
+          (_skipTermsByColumn[column] = new HashSet<string>(StringComparer.OrdinalIgnoreCase))
+        : _globalSkipTerms;
+
+    IReadOnlyCollection<string> GetAllSkipTerms(int columnIndex)
+    {
+        var terms = new HashSet<string>(_globalSkipTerms, StringComparer.OrdinalIgnoreCase);
+        if (_skipTermsByColumn.TryGetValue(columnIndex, out HashSet<string>? columnTerms))
+            terms.UnionWith(columnTerms);
+
+        return terms;
+    }
 
     async Task LoadFile(InputFileChangeEventArgs args)
     {
@@ -162,6 +204,13 @@ public partial class Shuffle : ComponentBase
                             .ToArray()
                         : [])
             ];
+            IReadOnlyCollection<string>[] skipTermsByColumn =
+            [
+                .. Enumerable.Range(0, _headers.Count)
+                    .Select(column => _modes[column] == ObfuscationMode.SkipFor
+                        ? GetAllSkipTerms(column)
+                        : [])
+            ];
             StringBuilder output = new();
             List<CsvRow> obfuscatedRows = [];
             output.AppendLine(string.Join(',', _headers.Select(EncodeCsv)));
@@ -188,7 +237,8 @@ public partial class Shuffle : ComponentBase
                             value,
                             _modes[column],
                             consistentValues,
-                            rowTokens
+                            rowTokens,
+                            skipTermsByColumn[column]
                         )
                     })
                 ];
@@ -210,7 +260,10 @@ public partial class Shuffle : ComponentBase
             _showObfuscated = true;
             _progress = 100;
             _progressLabel = "Obfuscation complete. Your file is ready.";
-            Snackbar.Add("Obfuscation complete. Your file is ready.", Severity.Success);
+            Snackbar.Add(
+                message: "Obfuscation complete. Your file is ready.",
+                severity: Severity.Success
+            );
         }
         catch (OperationCanceledException)
         {
@@ -226,7 +279,11 @@ public partial class Shuffle : ComponentBase
             _obfuscatedGridRows.Clear();
             _showObfuscated = false;
             _progressLabel = "Obfuscation could not complete.";
-            Snackbar.Add($"Obfuscation failed: {exception.Message}", Severity.Error, options => options.RequireInteraction = true);
+            Snackbar.Add(
+                message: $"Obfuscation failed: {exception.Message}",
+                severity: Severity.Error,
+                configure: options => options.RequireInteraction = true
+            );
         }
         finally
         {
@@ -270,6 +327,7 @@ public partial class Shuffle : ComponentBase
         _gridRows.Clear();
         _obfuscatedGridRows.Clear();
         _modes.Clear();
+        _skipTermsByColumn.Clear();
         _originalCsv = null;
         _obfuscatedCsv = null;
         _showObfuscated = false;

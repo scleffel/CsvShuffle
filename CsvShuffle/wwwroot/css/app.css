@@ -180,6 +180,24 @@ body {
   width: clamp(9rem, 20vw, 14rem);
 }
 
+.skip-for-popover {
+  width: min(24rem, calc(100vw - 2rem));
+}
+
+.skip-for-terms {
+  min-height: 3rem;
+  max-height: 11rem;
+  overflow-y: auto;
+}
+
+.skip-for-chip-set {
+  gap: .35rem;
+}
+
+.skip-for-chip-term {
+  font-family: monospace;
+}
+
 .toolbar-action--compact {
   display: none !important;
 }
